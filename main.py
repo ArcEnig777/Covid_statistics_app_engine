@@ -22,12 +22,11 @@ def root():
             'name': 'USA vs China COVID-19 Comparison',
             'description': 'Compare COVID-19 statistics between USA and China'
         },
-        # You can add more routes here as you create them
-        # {
-        #     'path': '/another-route',
-        #     'name': 'Another Comparison',
-        #     'description': 'Description of another route'
-        # }
+        {
+            'path': '/country/italy',
+            'name': 'Italy COVID-19 Statistics',
+            'description': 'View detailed COVID-19 statistics for Italy'
+        },
     ]
     
     return render_template("index.html", routes=routes)
@@ -72,7 +71,7 @@ def create_covid_plot(countries, confirmed, deaths, recovered):
     x = np.arange(len(countries))
     width = 0.25
 
-    fig, ax = plt.subplots(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(10, 6))
 
     # Create bars for each category
     bars1 = ax.bar(x - width, confirmed, width, label='Confirmed', color='#1f77b4', alpha=0.8)
@@ -119,6 +118,125 @@ def create_covid_plot(countries, confirmed, deaths, recovered):
     gc.collect()
     
     return img_buffer
+
+def create_single_country_plot(country_data):
+    """Create COVID-19 statistics plot for a single country and return as bytes"""
+    # Extract data
+    country_name = country_data['country']
+    categories = ['Active', 'Confirmed', 'Critical', 'Deaths', 'Recovered']
+    values = [
+        country_data['active'],
+        country_data['confirmed'],
+        country_data['critical'],
+        country_data['deaths'],
+        country_data['recovered']
+    ]
+    
+    # Colors for each category
+    colors = ['#ff7f0e', '#1f77b4', '#d62728', '#2ca02c', '#9467bd']
+    
+    # Set up the plot - single subplot now
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    # Create donut chart with all categories
+    pie_categories = ['Active', 'Critical', 'Deaths', 'Recovered']
+    pie_values = [
+        country_data['active'],
+        country_data['critical'],
+        country_data['deaths'],
+        country_data['recovered']
+    ]
+    pie_colors = ['#ff7f0e', '#d62728', '#2ca02c', '#9467bd']
+    
+    # Only show donut chart if there are values to display
+    if sum(pie_values) > 0:
+        # Calculate percentages
+        total = sum(pie_values)
+        percentages = [val/total*100 for val in pie_values]
+        
+        # Create donut chart
+        wedges, texts, autotexts = ax.pie(pie_values, colors=pie_colors, startangle=90,
+                                         autopct=lambda pct: f'{pct:.1f}%' if pct >= 1 else '',
+                                         textprops={'fontsize': 10},
+                                         wedgeprops={'width': 0.6})  # This makes it a donut
+        
+        # Make autopct text white and bold for better visibility
+        for autotext in autotexts:
+            autotext.set_color('white')
+            autotext.set_fontweight('bold')
+            autotext.set_fontsize(9)
+        
+        # Add center text with total and country info
+        center_circle = plt.Circle((0,0), 0.3, fc='white')
+        ax.add_artist(center_circle)
+        ax.text(0, 0.1, f'{country_name}', ha='center', va='center', 
+                fontsize=14, fontweight='bold')
+        ax.text(0, -0.1, f'Total Cases:\n{total:,}', ha='center', va='center', 
+                fontsize=11, fontweight='bold')
+        
+        # Create a legend with all statistics
+        legend_labels = []
+        for cat, val in zip(pie_categories, pie_values):
+            legend_labels.append(f'{cat}: {val:,}')
+        
+        # Add confirmed cases to legend since it's not in the donut
+        legend_labels.append(f"Confirmed: {country_data['confirmed']:,}")
+        
+        ax.legend(wedges, legend_labels,
+                 title="COVID-19 Statistics",
+                 loc="center left",
+                 bbox_to_anchor=(1, 0, 0.5, 1),
+                 fontsize=10)
+        
+        ax.set_title(f'COVID-19 Statistics: {country_name}', 
+                    fontsize=16, fontweight='bold', pad=20)
+        
+    else:
+        # If no data, show a message
+        ax.text(0.5, 0.5, f'No data available\nfor {country_name}', 
+                horizontalalignment='center', verticalalignment='center',
+                transform=ax.transAxes, fontsize=14, fontweight='bold')
+        ax.set_title(f'COVID-19 Statistics: {country_name}', fontsize=16, fontweight='bold')
+    
+    # Equal aspect ratio ensures that pie is drawn as a circle
+    ax.set_aspect('equal')
+    
+    plt.tight_layout()
+    
+    # Save plot to bytes buffer
+    img_buffer = io.BytesIO()
+    plt.savefig(img_buffer, format='png', dpi=100, bbox_inches='tight')
+    img_buffer.seek(0)
+    plt.close(fig)  # Close the figure to free memory
+    plt.close('all')
+    gc.collect()
+    
+    return img_buffer
+
+@app.route("/country/<country_name>")
+def country_stats(country_name):
+    # Initialize COVID data
+    covid = Covid()
+    
+    try:
+        country_data = covid.get_status_by_country_name(country_name.lower())
+        
+        # Create the plot
+        img = create_single_country_plot(country_data)
+        
+        # Convert plot to base64 for embedding in HTML
+        img_base64 = base64.b64encode(img.getvalue()).decode('utf-8')
+
+        # Force cleanup
+        del img
+        gc.collect()
+        
+        return render_template('c_stats.html', 
+                             chart_image=img_base64,
+                             country_data=country_data)
+    
+    except Exception as e:
+        return f"Error fetching COVID data for {country_name}: {str(e)}"
 
 
 

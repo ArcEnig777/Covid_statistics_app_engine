@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ country_data.country }} COVID-19 Statistics</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="btn btn-secondary">← Back to Home</a>
+        
+        <h1>COVID-19 Statistics: {{ country_data.country }}</h1>
+        
+        <div class="chart-container">
+            <img src="data:image/png;base64,{{ chart_image }}" alt="COVID-19 Statistics Chart for {{ country_data.country }}">
+        </div>
+        
+        <div class="data-summary">
+            <div class="country-data">
+                <h3>Key Statistics</h3>
+                <p><strong>Confirmed Cases:</strong> {{ "{:,}".format(country_data.confirmed) }}</p>
+                <p><strong>Active Cases:</strong> {{ "{:,}".format(country_data.active) }}</p>
+                <p><strong>Critical Cases:</strong> {{ "{:,}".format(country_data.critical) }}</p>
+                <p><strong>Deaths:</strong> {{ "{:,}".format(country_data.deaths) }}</p>
+                <p><strong>Recovered:</strong> {{ "{:,}".format(country_data.recovered) }}</p>
+            </div>
+            <div class="country-data">
+                <h3>Additional Information</h3>
+                <p><strong>New Cases Today:</strong> {{ "{:,}".format(country_data.new_cases) }}</p>
+                <p><strong>New Deaths Today:</strong> {{ "{:,}".format(country_data.new_deaths) }}</p>
+                <p><strong>Total Tests:</strong> {{ "{:,}".format(country_data.total_tests) }}</p>
+                <p><strong>Cases per Million:</strong> {{ country_data.total_cases_per_million }}</p>
+                <p><strong>Deaths per Million:</strong> {{ country_data.total_deaths_per_million }}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

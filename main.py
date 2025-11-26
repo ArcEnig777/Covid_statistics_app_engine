@@ -11,21 +11,21 @@ import gc
 from flask import Flask, render_template, request
 
 app = Flask(__name__)
+covid = Covid()
 
 
 @app.route("/")
 def root():
-    # Create a navigation page with buttons to other routes
     routes = [
         {
             'path': '/usavchina',
-            'name': 'USA vs China COVID-19 Comparison',
-            'description': 'Compare COVID-19 statistics between USA and China'
+            'name': 'USA vs China',
+            'description': 'Compare key COVID statistics between USA and China'
         },
         {
             'path': '/country/italy',
-            'name': 'Italy COVID-19 Statistics',
-            'description': 'View detailed COVID-19 statistics for Italy'
+            'name': 'Italy COVID Statistics',
+            'description': 'View detailed COVID statistics for Italy'
         },
     ]
     
@@ -33,8 +33,6 @@ def root():
 
 @app.route("/usavchina")
 def covid_comparison_usa_v_china():
-    # Initialize COVID data
-    covid = Covid()
     
     try:
         usa = covid.get_status_by_country_name("usa")
@@ -47,7 +45,7 @@ def covid_comparison_usa_v_china():
         recovered = [usa['recovered'], china['recovered']]
         
         # Create the plot
-        img = create_covid_plot(countries, confirmed, deaths, recovered)
+        img = create_compcovid_plot(countries, confirmed, deaths, recovered)
         
         # Convert plot to base64 for embedding in HTML
         img_base64 = base64.b64encode(img.getvalue()).decode('utf-8')
@@ -65,8 +63,7 @@ def covid_comparison_usa_v_china():
     except Exception as e:
         return f"Error fetching COVID data: {str(e)}"
 
-def create_covid_plot(countries, confirmed, deaths, recovered):
-    """Create COVID-19 comparison plot and return as bytes"""
+def create_compcovid_plot(countries, confirmed, deaths, recovered):
     # Set up the plot
     x = np.arange(len(countries))
     width = 0.25
@@ -80,8 +77,8 @@ def create_covid_plot(countries, confirmed, deaths, recovered):
 
     # Customize the chart
     ax.set_xlabel('Countries', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Number of Cases', fontsize=12, fontweight='bold')
-    ax.set_title('COVID-19 Cases: USA vs China Comparison', fontsize=16, fontweight='bold')
+    ax.set_ylabel('Number of Cases (millions)', fontsize=12, fontweight='bold')
+    ax.set_title('COVID: USA vs China', fontsize=16, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(countries, fontsize=12)
     ax.legend(fontsize=11)
@@ -119,21 +116,9 @@ def create_covid_plot(countries, confirmed, deaths, recovered):
     
     return img_buffer
 
-def create_single_country_plot(country_data):
-    """Create COVID-19 statistics plot for a single country and return as bytes"""
+def create_sc_plt_donut(country_data):
     # Extract data
     country_name = country_data['country']
-    categories = ['Active', 'Confirmed', 'Critical', 'Deaths', 'Recovered']
-    values = [
-        country_data['active'],
-        country_data['confirmed'],
-        country_data['critical'],
-        country_data['deaths'],
-        country_data['recovered']
-    ]
-    
-    # Colors for each category
-    colors = ['#ff7f0e', '#1f77b4', '#d62728', '#2ca02c', '#9467bd']
     
     # Set up the plot - single subplot now
     fig, ax = plt.subplots(figsize=(10, 6))
@@ -152,10 +137,9 @@ def create_single_country_plot(country_data):
     if sum(pie_values) > 0:
         # Calculate percentages
         total = sum(pie_values)
-        percentages = [val/total*100 for val in pie_values]
         
         # Create donut chart
-        wedges, texts, autotexts = ax.pie(pie_values, colors=pie_colors, startangle=90,
+        wedges, _, autotexts = ax.pie(pie_values, colors=pie_colors, startangle=90,
                                          autopct=lambda pct: f'{pct:.1f}%' if pct >= 1 else '',
                                          textprops={'fontsize': 10},
                                          wedgeprops={'width': 0.6})  # This makes it a donut
@@ -188,7 +172,7 @@ def create_single_country_plot(country_data):
                  bbox_to_anchor=(1, 0, 0.5, 1),
                  fontsize=10)
         
-        ax.set_title(f'COVID-19 Statistics: {country_name}', 
+        ax.set_title(f'COVID Statistics: {country_name}', 
                     fontsize=16, fontweight='bold', pad=20)
         
     else:
@@ -215,14 +199,12 @@ def create_single_country_plot(country_data):
 
 @app.route("/country/<country_name>")
 def country_stats(country_name):
-    # Initialize COVID data
-    covid = Covid()
     
     try:
         country_data = covid.get_status_by_country_name(country_name.lower())
         
         # Create the plot
-        img = create_single_country_plot(country_data)
+        img = create_sc_plt_donut(country_data)
         
         # Convert plot to base64 for embedding in HTML
         img_base64 = base64.b64encode(img.getvalue()).decode('utf-8')

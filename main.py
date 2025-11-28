@@ -18,34 +18,58 @@ covid = Covid()
 def root():
     routes = [
         {
-            'path': '/usavchina',
-            'name': 'USA vs China',
-            'description': 'Compare key COVID statistics between USA and China'
+            'path': '/regional',
+            'name': 'Regional Analysis',
+            'description': 'Compare key COVID statistics between the main regions across the globe'
         },
         {
-            'path': '/country/italy',
-            'name': 'Italy COVID Statistics',
-            'description': 'View detailed COVID statistics for Italy'
+            'path': '/country/world',
+            'name': 'World COVID Statistics',
+            'description': 'View detailed COVID statistics for the entire globe'
+        },
+        {
+            'path': '/country/usa',
+            'name': 'USA COVID Statistics',
+            'description': 'View detailed COVID statistics for the USA'
+        },
+        {
+            'path': '/country/china',
+            'name': 'China COVID Statistics',
+            'description': 'View detailed COVID statistics for China'
+        },
+        {
+            'path': '/country/mexico',
+            'name': 'Mexico COVID Statistics',
+            'description': 'View detailed COVID statistics for Mexico'
+        },
+        {
+            'path': '/country/russia',
+            'name': 'Russia COVID Statistics',
+            'description': 'View detailed COVID statistics for Russia'
         },
     ]
     
     return render_template("index.html", routes=routes)
 
-@app.route("/usavchina")
-def covid_comparison_usa_v_china():
+@app.route("/regional")
+def covid_comparison_regional():
     
     try:
-        usa = covid.get_status_by_country_name("usa")
-        china = covid.get_status_by_country_name("china")
+        n_america = covid.get_status_by_country_name("north america")
+        asia = covid.get_status_by_country_name("asia")
+        eu = covid.get_status_by_country_name("europe")
+        s_america = covid.get_status_by_country_name("south america")
+        oceania = covid.get_status_by_country_name("oceania")
+        africa = covid.get_status_by_country_name("africa")
         
         # Extract data
-        countries = [usa['country'], china['country']]
-        confirmed = [usa['confirmed'], china['confirmed']]
-        deaths = [usa['deaths'], china['deaths']]
-        recovered = [usa['recovered'], china['recovered']]
+        regions = [n_america['country'], asia['country'], eu['country'], s_america['country'], oceania['country'], africa['country']]
+        confirmed = [n_america['confirmed'], asia['confirmed'], eu['confirmed'], s_america['confirmed'], oceania['confirmed'], africa['confirmed']]
+        deaths = [n_america['deaths'], asia['deaths'], eu['deaths'], s_america['deaths'], oceania['deaths'], africa['deaths']]
+        recovered = [n_america['recovered'], asia['recovered'], eu['recovered'], s_america['recovered'], oceania['recovered'], africa['recovered']]
         
         # Create the plot
-        img = create_compcovid_plot(countries, confirmed, deaths, recovered)
+        img = create_compcovid_plot(regions, confirmed, deaths, recovered)
         
         # Convert plot to base64 for embedding in HTML
         img_base64 = base64.b64encode(img.getvalue()).decode('utf-8')
@@ -54,11 +78,15 @@ def covid_comparison_usa_v_china():
         del img
         gc.collect()
         
-        return render_template('usa_v_china.html', 
+        return render_template('regional.html', 
                              chart_image=img_base64,
-                             countries=countries,
-                             usa_data=usa,
-                             china_data=china)
+                             countries=regions,
+                             n_america_data=n_america,
+                             asia_data=asia,
+                             eu_data=eu,
+                             s_america_data=s_america,
+                             oceania_data=oceania,
+                             africa_data=africa)
     
     except Exception as e:
         return f"Error fetching COVID data: {str(e)}"
@@ -76,9 +104,9 @@ def create_compcovid_plot(countries, confirmed, deaths, recovered):
     bars3 = ax.bar(x + width, recovered, width, label='Recovered', color='#2ca02c', alpha=0.8)
 
     # Customize the chart
-    ax.set_xlabel('Countries', fontsize=12, fontweight='bold')
+    ax.set_xlabel('Regions', fontsize=12, fontweight='bold')
     ax.set_ylabel('Number of Cases (millions)', fontsize=12, fontweight='bold')
-    ax.set_title('COVID: USA vs China', fontsize=16, fontweight='bold')
+    ax.set_title('COVID: Regional Analysis', fontsize=16, fontweight='bold')
     ax.set_xticks(x)
     ax.set_xticklabels(countries, fontsize=12)
     ax.legend(fontsize=11)
@@ -92,7 +120,7 @@ def create_compcovid_plot(countries, confirmed, deaths, recovered):
                     xytext=(0, 3),
                     textcoords="offset points",
                     ha='center', va='bottom',
-                    fontsize=9, fontweight='bold')
+                    fontsize=6, fontweight='bold')
 
     add_value_labels(bars1)
     add_value_labels(bars2)
@@ -167,13 +195,10 @@ def create_sc_plt_donut(country_data):
         legend_labels.append(f"Confirmed: {country_data['confirmed']:,}")
         
         ax.legend(wedges, legend_labels,
-                 title="COVID-19 Statistics",
+                 title="COVID Statistics",
                  loc="center left",
                  bbox_to_anchor=(1, 0, 0.5, 1),
                  fontsize=10)
-        
-        ax.set_title(f'COVID Statistics: {country_name}', 
-                    fontsize=16, fontweight='bold', pad=20)
         
     else:
         # If no data, show a message

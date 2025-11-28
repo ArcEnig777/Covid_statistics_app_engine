@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ country_data.country }} COVID-19 Statistics</title>
+    <title>{{ country_data.country }} COVID Statistics</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
         <a href="/" class="btn btn-secondary">← Back to Home</a>
         
-        <h1>COVID-19 Statistics: {{ country_data.country }}</h1>
+        <h1>COVID Statistics: {{ country_data.country }}</h1>
         
         <div class="chart-container">
             <img src="data:image/png;base64,{{ chart_image }}" alt="COVID-19 Statistics Chart for {{ country_data.country }}">
@@ -30,8 +30,8 @@
                 <p><strong>New Cases Today:</strong> {{ "{:,}".format(country_data.new_cases) }}</p>
                 <p><strong>New Deaths Today:</strong> {{ "{:,}".format(country_data.new_deaths) }}</p>
                 <p><strong>Total Tests:</strong> {{ "{:,}".format(country_data.total_tests) }}</p>
-                <p><strong>Cases per Million:</strong> {{ country_data.total_cases_per_million }}</p>
-                <p><strong>Deaths per Million:</strong> {{ country_data.total_deaths_per_million }}</p>
+                <p><strong>Cases per Million (Decimal):</strong> {{ country_data.total_cases_per_million }}</p>
+                <p><strong>Deaths per Million (Decimal):</strong> {{ country_data.total_deaths_per_million }}</p>
             </div>
         </div>
     </div>

@@ -3,25 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>COVID-19 Data Dashboard</title>
+    <title>COVID Statististics Dashboard</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
     <div class="container">
-        <h1>COVID-19 Statistics Dashboard</h1>
+        <h1>COVID Statistics Dashboard</h1>
 
-        <p>
+        <p class="center-text">
             Welcome to our Covid Dashboard which includes multiple visual and non-visual statistics of
             different countries and comparisons between different countries to help you get a better idea of
             the impact of the covid epidemic that rages even on today. Statistics brought to you by Worldometers
         
-        {% for route in routes %}
-        <div class="route-card">
-            <div class="route-name">{{ route.name }}</div>
-            <div class="route-description">{{ route.description }}</div>
-            <a href="{{ route.path }}" class="btn">View Comparison</a>
+        </p>
+        <div class="routes-grid">
+            {% for route in routes %}
+            <a href="{{ route.path }}" class="route-card">
+                <div class="route-name">{{ route.name }}</div>
+                <div class="route-description">{{ route.description }}</div>
+            </a>
+            {% endfor %}
         </div>
-        {% endfor %}
     </div>
 </body>
 </html>
